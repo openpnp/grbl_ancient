@@ -85,22 +85,26 @@ void protocol_status_report()
  // home position by the user (likely through '$' setting interface).
  // Successfully tested at a query rate of 10-20Hz while running a gauntlet of programs at various 
  // speeds.
- int32_t print_position[3];
+ int32_t print_position[4];
  memcpy(print_position,sys.position,sizeof(sys.position));
  #if REPORT_INCH_MODE
    printString("MPos:["); printFloat(print_position[X_AXIS]/(settings.steps_per_mm[X_AXIS]*MM_PER_INCH));
    printString(","); printFloat(print_position[Y_AXIS]/(settings.steps_per_mm[Y_AXIS]*MM_PER_INCH));
    printString(","); printFloat(print_position[Z_AXIS]/(settings.steps_per_mm[Z_AXIS]*MM_PER_INCH));
+   printString(","); printFloat(print_position[C_AXIS]/(settings.steps_per_mm[C_AXIS]*MM_PER_INCH));
    printString("],WPos:["); printFloat((print_position[X_AXIS]/settings.steps_per_mm[X_AXIS]-sys.coord_system[sys.coord_select][X_AXIS]-sys.coord_offset[X_AXIS])/MM_PER_INCH);
    printString(","); printFloat((print_position[Y_AXIS]/settings.steps_per_mm[Y_AXIS]-sys.coord_system[sys.coord_select][Y_AXIS]-sys.coord_offset[Y_AXIS])/MM_PER_INCH);
    printString(","); printFloat((print_position[Z_AXIS]/settings.steps_per_mm[Z_AXIS]-sys.coord_system[sys.coord_select][Z_AXIS]-sys.coord_offset[Z_AXIS])/MM_PER_INCH);
+   printString(","); printFloat((print_position[C_AXIS]/settings.steps_per_mm[C_AXIS]-sys.coord_system[sys.coord_select][C_AXIS]-sys.coord_offset[C_AXIS])/MM_PER_INCH);
  #else
    printString("MPos:["); printFloat(print_position[X_AXIS]/(settings.steps_per_mm[X_AXIS]));
    printString(","); printFloat(print_position[Y_AXIS]/(settings.steps_per_mm[Y_AXIS]));
    printString(","); printFloat(print_position[Z_AXIS]/(settings.steps_per_mm[Z_AXIS]));
+   printString(","); printFloat(print_position[C_AXIS]/(settings.steps_per_mm[C_AXIS]));
    printString("],WPos:["); printFloat(print_position[X_AXIS]/settings.steps_per_mm[X_AXIS]-sys.coord_system[sys.coord_select][X_AXIS]-sys.coord_offset[X_AXIS]);
    printString(","); printFloat(print_position[Y_AXIS]/settings.steps_per_mm[Y_AXIS]-sys.coord_system[sys.coord_select][Y_AXIS]-sys.coord_offset[Y_AXIS]);
    printString(","); printFloat(print_position[Z_AXIS]/settings.steps_per_mm[Z_AXIS]-sys.coord_system[sys.coord_select][Z_AXIS]-sys.coord_offset[Z_AXIS]);
+   printString(","); printFloat(print_position[C_AXIS]/settings.steps_per_mm[C_AXIS]-sys.coord_system[sys.coord_select][C_AXIS]-sys.coord_offset[C_AXIS]);
  #endif
  printString("]\r\n");
 }

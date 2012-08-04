@@ -33,6 +33,7 @@
 #define X_AXIS 0
 #define Y_AXIS 1
 #define Z_AXIS 2
+#define C_AXIS 3
 
 #define MM_PER_INCH (25.4)
 
@@ -70,14 +71,14 @@ typedef struct {
   uint8_t feed_hold;             // Feed hold flag. Held true during feed hold. Released when ready to resume.
   uint8_t auto_start;            // Planner auto-start flag. Toggled off during feed hold. Defaulted by settings.
 
-  int32_t position[3];           // Real-time machine (aka home) position vector in steps. 
+  int32_t position[4];           // Real-time machine (aka home) position vector in steps.
                                  // NOTE: This may need to be a volatile variable, if problems arise. 
 
   uint8_t coord_select;          // Active work coordinate system number. Default: 0=G54.
-  double coord_system[N_COORDINATE_SYSTEM][3]; // Work coordinate systems (G54+). Stores offset from
+  double coord_system[N_COORDINATE_SYSTEM][4]; // Work coordinate systems (G54+). Stores offset from
   															 // absolute machine position in mm.
                                  // Rows: Work system number (0=G54,1=G55,...5=G59), Columns: XYZ Offsets
-  double coord_offset[3];        // Retains the G92 coordinate offset (work coordinates) relative to
+  double coord_offset[4];        // Retains the G92 coordinate offset (work coordinates) relative to
                                  // machine zero in mm.
                           
   volatile uint8_t cycle_start;  // Cycle start flag. Set by stepper subsystem or main program. 

@@ -47,6 +47,7 @@ typedef struct {
 #define DEFAULT_X_STEPS_PER_MM (94.488188976378*MICROSTEPS)
 #define DEFAULT_Y_STEPS_PER_MM (94.488188976378*MICROSTEPS)
 #define DEFAULT_Z_STEPS_PER_MM (94.488188976378*MICROSTEPS)
+#define DEFAULT_C_STEPS_PER_MM (94.488188976378*MICROSTEPS)
 #define DEFAULT_STEP_PULSE_MICROSECONDS 30
 #define DEFAULT_MM_PER_ARC_SEGMENT 0.1
 #define DEFAULT_RAPID_FEEDRATE 500.0 // mm/min
@@ -60,6 +61,7 @@ void settings_reset() {
   settings.steps_per_mm[X_AXIS] = DEFAULT_X_STEPS_PER_MM;
   settings.steps_per_mm[Y_AXIS] = DEFAULT_Y_STEPS_PER_MM;
   settings.steps_per_mm[Z_AXIS] = DEFAULT_Z_STEPS_PER_MM;
+  settings.steps_per_mm[C_AXIS] = DEFAULT_C_STEPS_PER_MM;
   settings.pulse_microseconds = DEFAULT_STEP_PULSE_MICROSECONDS;
   settings.default_feed_rate = DEFAULT_FEEDRATE;
   settings.default_seek_rate = DEFAULT_RAPID_FEEDRATE;
@@ -73,7 +75,8 @@ void settings_dump() {
   printPgmString(PSTR("$0 = ")); printFloat(settings.steps_per_mm[X_AXIS]);
   printPgmString(PSTR(" (steps/mm x)\r\n$1 = ")); printFloat(settings.steps_per_mm[Y_AXIS]);
   printPgmString(PSTR(" (steps/mm y)\r\n$2 = ")); printFloat(settings.steps_per_mm[Z_AXIS]);
-  printPgmString(PSTR(" (steps/mm z)\r\n$3 = ")); printInteger(settings.pulse_microseconds);
+  printPgmString(PSTR(" (steps/mm z)\r\n$11 = ")); printFloat(settings.steps_per_mm[C_AXIS]);
+  printPgmString(PSTR(" (steps/mm c)\r\n$3 = ")); printInteger(settings.pulse_microseconds);
   printPgmString(PSTR(" (microseconds step pulse)\r\n$4 = ")); printFloat(settings.default_feed_rate);
   printPgmString(PSTR(" (mm/min default feed rate)\r\n$5 = ")); printFloat(settings.default_seek_rate);
   printPgmString(PSTR(" (mm/min default seek rate)\r\n$6 = ")); printFloat(settings.mm_per_arc_segment);
@@ -144,13 +147,13 @@ int read_settings() {
     settings.acceleration *= 3600; // Convert to mm/min^2 from mm/sec^2
 //     settings.auto_start = DEFAULT_AUTO_START;
     write_settings();
-//   } else if (version == 4) {
-//     // Migrate from settings version 4
-//     if (!(memcpy_from_eeprom_with_checksum((char*)&settings, 1, sizeof(settings_t)))) {
-//       return(false);
-//     }
-//     settings.auto_start = DEFAULT_AUTO_START;
-//     write_settings();
+   } else if (version == 4) {
+     // Migrate from settings version 4
+     if (!(memcpy_from_eeprom_with_checksum((char*)&settings, 1, sizeof(settings_t)))) {
+       return(false);
+     }
+     //settings.auto_start = DEFAULT_AUTO_START;
+     write_settings();
   } else {      
     return(false);
   }
@@ -179,6 +182,12 @@ void settings_store_setting(int parameter, double value) {
     case 8: settings.acceleration = value*60*60; break; // Convert to mm/min^2 for grbl internal use.
     case 9: settings.junction_deviation = fabs(value); break;
 //     case 10: settings.auto_start = value; break;
+    case 11:
+        if (value <= 0.0) {
+          printPgmString(PSTR("Steps/mm must be > 0.0\r\n"));
+          return;
+        }
+    	settings.steps_per_mm[C_AXIS] = value; break;
     default: 
       printPgmString(PSTR("Unknown parameter\r\n"));
       return;

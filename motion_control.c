@@ -44,7 +44,7 @@
 // However, this keeps the memory requirements lower since it doesn't have to call and hold two 
 // plan_buffer_lines in memory. Grbl only has to retain the original line input variables during a
 // backlash segment(s).
-void mc_line(double x, double y, double z, double feed_rate, uint8_t invert_feed_rate)
+void mc_line(double x, double y, double z, double c, double feed_rate, uint8_t invert_feed_rate)
 {
   // TODO: Backlash compensation may be installed here. Only need direction info to track when
   // to insert a backlash line motion(s) before the intended line motion. Requires its own
@@ -59,7 +59,7 @@ void mc_line(double x, double y, double z, double feed_rate, uint8_t invert_feed
     protocol_execute_runtime(); // Check for any run-time commands
     if (sys.abort) { return; } // Bail, if system abort.
   } while ( plan_check_full_buffer() );  
-  plan_buffer_line(x, y, z, feed_rate, invert_feed_rate);
+  plan_buffer_line(x, y, z, c, feed_rate, invert_feed_rate);
   
   // Auto-cycle start immediately after planner finishes. Enabled/disabled by grbl settings. During 
   // a feed hold, auto-start is disabled momentarily until the cycle is resumed by the cycle-start 
@@ -167,13 +167,14 @@ void mc_arc(double *position, double *target, double *offset, uint8_t axis_0, ui
     arc_target[axis_0] = center_axis0 + r_axis0;
     arc_target[axis_1] = center_axis1 + r_axis1;
     arc_target[axis_linear] += linear_per_segment;
-    mc_line(arc_target[X_AXIS], arc_target[Y_AXIS], arc_target[Z_AXIS], feed_rate, invert_feed_rate);
+    // TODO: Just bailing out on C, need to understand code better.
+    mc_line(arc_target[X_AXIS], arc_target[Y_AXIS], arc_target[Z_AXIS], 0, feed_rate, invert_feed_rate);
     
     // Bail mid-circle on system abort. Runtime command check already performed by mc_line.
     if (sys.abort) { return; }
   }
   // Ensure last segment arrives at target location.
-  mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], feed_rate, invert_feed_rate);
+  mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], 0, feed_rate, invert_feed_rate);
 }
 
 
@@ -196,5 +197,5 @@ void mc_dwell(double seconds)
 void mc_go_home()
 {
   limits_go_home();  
-  plan_set_current_position(0,0,0);
+  plan_set_current_position(0,0,0,0);
 }
