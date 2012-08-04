@@ -27,9 +27,9 @@
 #                is connected.
 # FUSES ........ Parameters for avrdude to flash the fuses appropriately.
 
-DEVICE     = atmega328p
+DEVICE     = atmega2560
 CLOCK      = 16000000
-PROGRAMMER = -c avrisp2 -P usb
+PROGRAMMER = -c wiring -P /dev/tty.usbmodem1a12141 -B 115200
 OBJECTS    = main.o motion_control.o gcode.o spindle_control.o serial.o protocol.o stepper.o \
              eeprom.o settings.o planner.o nuts_bolts.o limits.o print.o
 # FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
