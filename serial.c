@@ -105,7 +105,11 @@ void serial_write(uint8_t data) {
 }
 
 // Data Register Empty Interrupt handler
+#if defined(USART0_RX_vect)
+ISR(USART0_UDRE_vect)
+#else
 ISR(USART_UDRE_vect)
+#endif
 {
   // Temporary tx_buffer_tail (to optimize for volatile)
   uint8_t tail = tx_buffer_tail;
@@ -154,7 +158,11 @@ uint8_t serial_read()
   }
 }
 
+#if defined(USART0_RX_vect)
+ISR(USART0_RX_vect)
+#else
 ISR(USART_RX_vect)
+#endif
 {
   uint8_t data = UDR0;
   uint8_t next_head;
@@ -188,8 +196,8 @@ ISR(USART_RX_vect)
             UCSR0B |=  (1 << UDRIE0); // Force TX
           } 
         #endif
-        
       }
+      break;
   }
 }
 
