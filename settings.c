@@ -118,7 +118,7 @@ void settings_dump() {
   printPgmString(PSTR(")\r\n"));
 
   printPgmString(PSTR("$9 = "));
-  printInteger(settings.invert_mask_stepdir);
+  printInteger(settings.invert_mask_limit);
   printPgmString(PSTR(" (step port invert mask. binary = "));
   print_uint8_base2(settings.invert_mask_limit);
   printPgmString(PSTR(")\r\n"));
