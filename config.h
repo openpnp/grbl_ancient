@@ -42,6 +42,9 @@
 #define STEPPERS_DISABLE_DDR    DDRC
 #define STEPPERS_DISABLE_PORT   PORTC
 #define STEPPERS_DISABLE_BIT    7  // MEGA2560 Digital Pin 30
+// STEPPERS_DISABLE_INVERT: Set to 0 for active high stepper disable or 1
+// for active low stepper disable.
+#define STEPPERS_DISABLE_INVERT 0
 
 // Limit switches are active low by default. If you have active high
 // limit switches, make sure to set the invert mask in the runtime

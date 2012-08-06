@@ -33,7 +33,8 @@
 // Initialize and setup the stepper motor subsystem
 void st_init();
 
-// Immediately disables steppers
+// Immediately disables the stepper subsystem, while leaving the steppers
+// themselves enabled
 void st_go_idle();
 
 // Reset the stepper subsystem variables       
@@ -47,5 +48,14 @@ void st_cycle_reinitialize();
 
 // Initiates a feed hold of the running program
 void st_feed_hold();
+
+// Enables the steppers by setting the proper stepper disable output.
+void st_enable();
+
+// Disables the steppers by setting the proper stepper disable output.
+void st_disable();
+
+// Reports whether the steppers are enabled.
+int st_is_enabled();
 
 #endif

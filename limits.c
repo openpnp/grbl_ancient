@@ -148,8 +148,8 @@ static void leave_limit_switch(bool x, bool y, bool z, bool c) {
 
 void limits_go_home() {
   plan_synchronize();
-  // Enable steppers by resetting the stepper disable port
-  STEPPERS_DISABLE_PORT &= ~(1<<STEPPERS_DISABLE_BIT);
+
+  st_enable();
 
   bool home_x = false, home_y = false, home_z = false, home_c = false;
 #ifdef HOME_X
@@ -170,8 +170,6 @@ void limits_go_home() {
   // Now carefully leave the limit switches
   leave_limit_switch(home_x, home_y, home_z, home_c);
 
-  // Disable steppers by setting stepper disable
-  STEPPERS_DISABLE_PORT |= (1<<STEPPERS_DISABLE_BIT);
   // Conclude that this is machine zero
   sys.position[X_AXIS] = sys.position[Y_AXIS] = sys.position[Z_AXIS] = sys.position[C_AXIS] = 0;
 }

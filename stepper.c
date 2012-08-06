@@ -86,6 +86,21 @@ static volatile uint8_t busy;   // True when SIG_OUTPUT_COMPARE1A is being servi
 
 static void set_step_events_per_minute(uint32_t steps_per_minute);
 
+void st_enable() {
+	  STEPPERS_DISABLE_PORT = (STEPPERS_DISABLE_PORT & ~(1<<STEPPERS_DISABLE_BIT)) |
+	  	(STEPPERS_DISABLE_INVERT<<STEPPERS_DISABLE_BIT);
+}
+
+void st_disable() {
+	  STEPPERS_DISABLE_PORT = (STEPPERS_DISABLE_PORT & ~(1<<STEPPERS_DISABLE_BIT)) |
+	  	((1<<STEPPERS_DISABLE_BIT) ^ (STEPPERS_DISABLE_INVERT<<STEPPERS_DISABLE_BIT));
+}
+
+int st_is_enabled() {
+  return !((STEPPERS_DISABLE_DDR & (1<<STEPPERS_DISABLE_BIT)) &&
+    ((STEPPERS_DISABLE_PORT & (1<<STEPPERS_DISABLE_BIT)) ^ (STEPPERS_DISABLE_INVERT<<STEPPERS_DISABLE_BIT)));
+}
+
 // Stepper state initialization
 static void st_wake_up() 
 {
@@ -101,8 +116,7 @@ static void st_wake_up()
     // Set step pulse time. Ad hoc computation from oscilloscope. Uses two's complement.
     step_pulse_time = -(((settings.pulse_microseconds-2)*TICKS_PER_MICROSECOND) >> 3);
   #endif
-  // Enable steppers by resetting the stepper disable port
-  STEPPERS_DISABLE_PORT &= ~(1<<STEPPERS_DISABLE_BIT);
+  st_enable();
   // Enable stepper driver interrupt
   TIMSK1 |= (1<<OCIE1A);
 }
@@ -117,8 +131,6 @@ void st_go_idle()
   #if STEPPER_IDLE_LOCK_TIME > 0
     _delay_ms(STEPPER_IDLE_LOCK_TIME);   
   #endif
-  // Disable steppers by setting stepper disable
-  STEPPERS_DISABLE_PORT |= (1<<STEPPERS_DISABLE_BIT);
 }
 
 // This function determines an acceleration velocity change every CYCLES_PER_ACCELERATION_TICK by
@@ -351,6 +363,9 @@ void st_init()
   STEPPING_DDR |= STEPPING_MASK;
   STEPPING_PORT = (STEPPING_PORT & ~STEPPING_MASK) | settings.invert_mask_stepdir;
   STEPPERS_DISABLE_DDR |= 1<<STEPPERS_DISABLE_BIT;
+
+  // Disable the stepper drivers
+  st_disable();
 
   // waveform generation = 0100 = CTC
   TCCR1B &= ~(1<<WGM13);
