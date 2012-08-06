@@ -55,6 +55,7 @@ typedef struct {
 #define DEFAULT_ACCELERATION (DEFAULT_FEEDRATE*60*60/10.0) // mm/min^2
 #define DEFAULT_JUNCTION_DEVIATION 0.05 // mm
 #define DEFAULT_STEPPING_INVERT_MASK ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT))
+#define DEFAULT_LIMIT_INVERT_MASK 0 // active-low endstops by default
 // #define DEFAULT_AUTO_START 1 // Boolean
 
 void settings_reset() {
@@ -67,7 +68,8 @@ void settings_reset() {
   settings.default_seek_rate = DEFAULT_RAPID_FEEDRATE;
   settings.acceleration = DEFAULT_ACCELERATION;
   settings.mm_per_arc_segment = DEFAULT_MM_PER_ARC_SEGMENT;
-  settings.invert_mask = DEFAULT_STEPPING_INVERT_MASK;
+  settings.invert_mask_stepdir = DEFAULT_STEPPING_INVERT_MASK;
+  settings.invert_mask_limit = DEFAULT_LIMIT_INVERT_MASK;
   settings.junction_deviation = DEFAULT_JUNCTION_DEVIATION;
 }
 
@@ -75,15 +77,17 @@ void settings_dump() {
   printPgmString(PSTR("$0 = ")); printFloat(settings.steps_per_mm[X_AXIS]);
   printPgmString(PSTR(" (steps/mm x)\r\n$1 = ")); printFloat(settings.steps_per_mm[Y_AXIS]);
   printPgmString(PSTR(" (steps/mm y)\r\n$2 = ")); printFloat(settings.steps_per_mm[Z_AXIS]);
-  printPgmString(PSTR(" (steps/mm z)\r\n$11 = ")); printFloat(settings.steps_per_mm[C_AXIS]);
-  printPgmString(PSTR(" (steps/mm c)\r\n$3 = ")); printInteger(settings.pulse_microseconds);
-  printPgmString(PSTR(" (microseconds step pulse)\r\n$4 = ")); printFloat(settings.default_feed_rate);
-  printPgmString(PSTR(" (mm/min default feed rate)\r\n$5 = ")); printFloat(settings.default_seek_rate);
-  printPgmString(PSTR(" (mm/min default seek rate)\r\n$6 = ")); printFloat(settings.mm_per_arc_segment);
-  printPgmString(PSTR(" (mm/arc segment)\r\n$7 = ")); printInteger(settings.invert_mask); 
-  printPgmString(PSTR(" (step port invert mask. binary = ")); print_uint8_base2(settings.invert_mask);  
-  printPgmString(PSTR(")\r\n$8 = ")); printFloat(settings.acceleration/(60*60)); // Convert from mm/min^2 for human readability
-  printPgmString(PSTR(" (acceleration in mm/sec^2)\r\n$9 = ")); printFloat(settings.junction_deviation);
+  printPgmString(PSTR(" (steps/mm z)\r\n$3 = ")); printFloat(settings.steps_per_mm[C_AXIS]);
+  printPgmString(PSTR(" (steps/mm c)\r\n$4 = ")); printInteger(settings.pulse_microseconds);
+  printPgmString(PSTR(" (microseconds step pulse)\r\n$5 = ")); printFloat(settings.default_feed_rate);
+  printPgmString(PSTR(" (mm/min default feed rate)\r\n$6 = ")); printFloat(settings.default_seek_rate);
+  printPgmString(PSTR(" (mm/min default seek rate)\r\n$7 = ")); printFloat(settings.mm_per_arc_segment);
+  printPgmString(PSTR(" (mm/arc segment)\r\n$8 = ")); printInteger(settings.invert_mask_stepdir);
+  printPgmString(PSTR(" (step port invert mask. binary = ")); print_uint8_base2(settings.invert_mask_stepdir);
+  printPgmString(PSTR(")\r\n$9 = ")); printInteger(settings.invert_mask_limit);
+  printPgmString(PSTR(" (limits port invert mask. binary = ")); print_uint8_base2(settings.invert_mask_limit);
+  printPgmString(PSTR(")\r\n$10 = ")); printFloat(settings.acceleration/(60*60)); // Convert from mm/min^2 for human readability
+  printPgmString(PSTR(" (acceleration in mm/sec^2)\r\n$11 = ")); printFloat(settings.junction_deviation);
   printPgmString(PSTR(" (cornering junction deviation in mm)"));//\r\n$10 = ")); // printInteger(settings.auto_start);
 //   printPgmString(PSTR(" (auto-start boolean)"));
   printPgmString(PSTR("\r\n'$x=value' to set parameter or just '$' to dump current settings\r\n"));
@@ -163,31 +167,26 @@ int read_settings() {
 // A helper method to set settings from command line
 void settings_store_setting(int parameter, double value) {
   switch(parameter) {
-    case 0: case 1: case 2:
+    case 0: case 1: case 2: case 3:
     if (value <= 0.0) {
       printPgmString(PSTR("Steps/mm must be > 0.0\r\n"));
       return;
     }
     settings.steps_per_mm[parameter] = value; break;
-    case 3: 
+    case 4:
     if (value < 3) {
       printPgmString(PSTR("Step pulse must be >= 3 microseconds\r\n"));
       return;
     }
     settings.pulse_microseconds = round(value); break;
-    case 4: settings.default_feed_rate = value; break;
-    case 5: settings.default_seek_rate = value; break;
-    case 6: settings.mm_per_arc_segment = value; break;
-    case 7: settings.invert_mask = trunc(value); break;
-    case 8: settings.acceleration = value*60*60; break; // Convert to mm/min^2 for grbl internal use.
-    case 9: settings.junction_deviation = fabs(value); break;
+    case 5: settings.default_feed_rate = value; break;
+    case 6: settings.default_seek_rate = value; break;
+    case 7: settings.mm_per_arc_segment = value; break;
+    case 8: settings.invert_mask_stepdir = trunc(value); break;
+    case 9: settings.invert_mask_limit = trunc(value); break;
+    case 10: settings.acceleration = value*60*60; break; // Convert to mm/min^2 for grbl internal use.
+    case 111: settings.junction_deviation = fabs(value); break;
 //     case 10: settings.auto_start = value; break;
-    case 11:
-        if (value <= 0.0) {
-          printPgmString(PSTR("Steps/mm must be > 0.0\r\n"));
-          return;
-        }
-    	settings.steps_per_mm[C_AXIS] = value; break;
     default: 
       printPgmString(PSTR("Unknown parameter\r\n"));
       return;
