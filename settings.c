@@ -29,6 +29,8 @@
 #include "protocol.h"
 #include "config.h"
 #include "stepper.h"
+#include "spindle_control.h"
+#include "coolant_control.h"
 
 settings_t settings;
 
@@ -231,7 +233,13 @@ void settings_store_setting(int parameter, double value) {
     case 9: settings.invert_mask_limit = trunc(value); break;
     case 10: settings.acceleration = value*60*60; break; // Convert to mm/min^2 for grbl internal use.
     case 11: settings.junction_deviation = fabs(value); break;
-    case 1000: value ? st_enable(): st_disable(); return;
+    case 1000:
+    	value ? st_enable(): st_disable();
+    	if (!value) {
+    		coolant_flood(0);
+    		spindle_stop();
+    	}
+    	return;
     default: 
       printPgmString(PSTR("Unknown parameter\r\n"));
       return;
