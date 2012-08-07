@@ -73,6 +73,10 @@
 #define SPINDLE_DIRECTION_PORT PORTC
 #define SPINDLE_DIRECTION_BIT 1  //  MEGA2560 Digital Pin 36
 
+#define FLOOD_COOLANT_DDR 	DDRC
+#define FLOOD_COOLANT_PORT 	PORTC
+#define FLOOD_COOLANT_BIT	0	// MEGA2560 Digital Pin 37
+
 // Define runtime command special characters. These characters are 'picked-off' directly from the
 // serial read data stream and are not passed to the grbl line execution parser. Select characters
 // that do not and must not exist in the streamed g-code program. ASCII control characters may be 

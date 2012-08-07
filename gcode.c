@@ -31,6 +31,7 @@
 #include "spindle_control.h"
 #include "errno.h"
 #include "protocol.h"
+#include "coolant_control.h"
 
 // Define modal group internal numbers for checking multiple command violations and tracking the 
 // type of command that is called in the block. A modal group is a group of g-code commands that are
@@ -75,6 +76,7 @@ typedef struct {
   uint8_t absolute_mode;           // 0 = relative motion, 1 = absolute motion {G90, G91}
   uint8_t program_flow;            // {M0, M1, M2, M30}
   int8_t spindle_direction;        // 1 = CW, -1 = CCW, 0 = Stop {M3, M4, M5}
+  int8_t coolant_flood;
   double feed_rate, seek_rate;     // Millimeters/second
   double position[4];              // Where the interpreter considers the tool to be at this point in the code
   uint8_t tool;
@@ -215,6 +217,8 @@ uint8_t gc_execute_line(char *line)
           case 3: gc.spindle_direction = 1; break;
           case 4: gc.spindle_direction = -1; break;
           case 5: gc.spindle_direction = 0; break;
+          case 8: gc.coolant_flood = 1; break;
+          case 9: gc.coolant_flood = 0; break;
           default: FAIL(STATUS_UNSUPPORTED_STATEMENT);
         }            
         break;
@@ -281,6 +285,14 @@ uint8_t gc_execute_line(char *line)
   // [M3,M4,M5]: Update spindle state
   spindle_run(gc.spindle_direction, gc.spindle_speed);
   
+  // Update coolant state
+  if (gc.coolant_flood) {
+	  coolant_flood(1);
+  	  }
+  else {
+	  coolant_flood(0);
+  }
+
   //  ([M7,M8,M9]: Coolant state should be executed here.)
   
   // [G4,G10,G28,G30,G92,G92.1]: Perform dwell, set coordinate system data, homing, or set axis offsets.

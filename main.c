@@ -32,6 +32,7 @@
 #include "limits.h"
 #include "settings.h"
 #include "serial.h"
+#include "coolant_control.h"
 
 // Declare system global variable structure
 system_t sys; 
@@ -74,6 +75,7 @@ int main(void)
       gc_init(); // Set g-code parser to default state
       spindle_init();
       limits_init();
+      coolant_init();
       st_reset(); // Clear stepper subsystem variables.
       
       // Reload last known machine position and work systems. G92 coordinate offsets are reset.
