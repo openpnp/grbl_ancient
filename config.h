@@ -3,7 +3,7 @@
   Part of Grbl
 
   Copyright (c) 2009-2011 Simen Svale Skogsrud
-  Copyright (c) 2011 Sungeun K. Jeon
+  Copyright (c) 2011-2012 Sungeun K. Jeon
 
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,37 +24,73 @@
 
 // IMPORTANT: Any changes here requires a full re-compiling of the source code to propagate them.
 
-#define BAUD_RATE 9600
+#define BAUD_RATE 38400
 
-// Updated default pin-assignments from 0.6 onwards 
-// (see bottom of file for a copy of the old config)
+// Define pin-assignments
+#define STEPPING_DDR       DDRA
+#define STEPPING_PORT      PORTA
+#define STEPPING_PIN       PINA
+#define X_STEP_BIT         0  // MEGA2560 Digital Pin 22
+#define Y_STEP_BIT         2  // MEGA2560 Digital Pin 24
+#define Z_STEP_BIT         4  // MEGA2560 Digital Pin 26
+#define C_STEP_BIT		   6  // MEGA2560 Digital Pin 28
+#define X_DIRECTION_BIT    1  // MEGA2560 Digital Pin 23
+#define Y_DIRECTION_BIT    3  // MEGA2560 Digital Pin 25
+#define Z_DIRECTION_BIT    5  // MEGA2560 Digital Pin 27
+#define C_DIRECTION_BIT    7  // MEGA2560 Digital Pin 29
 
-#define STEPPERS_DISABLE_DDR     DDRB
-#define STEPPERS_DISABLE_PORT    PORTB
-#define STEPPERS_DISABLE_BIT         0
+#define STEPPERS_DISABLE_DDR    DDRC
+#define STEPPERS_DISABLE_PORT   PORTC
+#define STEPPERS_DISABLE_BIT    7  // MEGA2560 Digital Pin 30
+// STEPPERS_DISABLE_INVERT: Set to 0 for active high stepper disable or 1
+// for active low stepper disable.
+#define STEPPERS_DISABLE_INVERT 0
 
-#define STEPPING_DDR       DDRD
-#define STEPPING_PORT      PORTD
-#define X_STEP_BIT           2
-#define Y_STEP_BIT           3
-#define Z_STEP_BIT           4
-#define X_DIRECTION_BIT      5
-#define Y_DIRECTION_BIT      6
-#define Z_DIRECTION_BIT      7
+// Limit switches are active low by default. If you have active high
+// limit switches, make sure to set the invert mask in the runtime
+// configuration.
+#define LIMIT_DDR     DDRC
+#define LIMIT_PORT    PORTC
+#define LIMIT_PIN     PINC
+#define LIMIT_PULLUP
+#define X_LIMIT_BIT   6  // MEGA2560 Digital Pin 31
+#define Y_LIMIT_BIT   5  // MEGA2560 Digital Pin 32
+#define Z_LIMIT_BIT   4  // MEGA2560 Digital Pin 33
+#define C_LIMIT_BIT   3  // MEGA2560 Digital Pin 34
 
-#define LIMIT_DDR      DDRB
-#define LIMIT_PIN     PINB
-#define X_LIMIT_BIT          1
-#define Y_LIMIT_BIT          2
-#define Z_LIMIT_BIT          3
+// Comment or uncomment to determine which axes will be included in the homing
+// operation. Comment out any axes you don't have limit switches on.
+#define HOME_X
+#define HOME_Y
+//#define HOME_Z
+//#define HOME_C
 
-#define SPINDLE_ENABLE_DDR DDRB
-#define SPINDLE_ENABLE_PORT PORTB
-#define SPINDLE_ENABLE_BIT 4
+#define SPINDLE_ENABLE_DDR DDRC
+#define SPINDLE_ENABLE_PORT PORTC
+#define SPINDLE_ENABLE_BIT 2  //  MEGA2560 Digital Pin 35
 
-#define SPINDLE_DIRECTION_DDR DDRB
-#define SPINDLE_DIRECTION_PORT PORTB
-#define SPINDLE_DIRECTION_BIT 5
+#define SPINDLE_DIRECTION_DDR DDRC
+#define SPINDLE_DIRECTION_PORT PORTC
+#define SPINDLE_DIRECTION_BIT 1  //  MEGA2560 Digital Pin 36
+
+#define FLOOD_COOLANT_DDR 	DDRC
+#define FLOOD_COOLANT_PORT 	PORTC
+#define FLOOD_COOLANT_BIT	0	// MEGA2560 Digital Pin 37
+
+// Define runtime command special characters. These characters are 'picked-off' directly from the
+// serial read data stream and are not passed to the grbl line execution parser. Select characters
+// that do not and must not exist in the streamed g-code program. ASCII control characters may be 
+// used, if they are available per user setup. Also, extended ASCII codes (>127), which are never in 
+// g-code programs, maybe selected for interface programs.
+// TODO: Solidify these default characters. Temporary for now.
+#define CMD_STATUS_REPORT '?'
+#define CMD_FEED_HOLD '!'
+#define CMD_CYCLE_START '~'
+#define CMD_RESET 0x18 // ctrl-x
+
+// Specifies the number of work coordinate systems grbl will support (G54 - G59).
+// This parameter must be one or greater, currently supporting up to a value of 6.
+#define N_COORDINATE_SYSTEM 1
 
 // This parameter sets the delay time before disabling the steppers after the final block of movement.
 // A short delay ensures the steppers come to a complete stop and the residual inertial force in the 
@@ -62,8 +98,8 @@
 // entering g-code into grbl, i.e. locating part zero or simple manual machining. If the axes drift,
 // grbl has no way to know this has happened, since stepper motors are open-loop control. Depending
 // on the machine, this parameter may need to be larger or smaller than the default time.
-// NOTE: If defined 0, the delay will not be compiled.
-#define STEPPER_IDLE_LOCK_TIME 25 // (milliseconds) - Integer >= 0
+// NOTE: If set to zero, the delay will not be compiled.
+#define STEPPER_IDLE_LOCK_TIME 25 // (milliseconds) - Integer > 0
 
 // The temporal resolution of the acceleration management subsystem. Higher number give smoother
 // acceleration but may impact performance.
@@ -94,33 +130,63 @@
 // computational efficiency of generating arcs.
 #define N_ARC_CORRECTION 25 // Integer (1-255)
 
+// Time delay increments performed during a dwell. The default value is set at 50ms, which provides
+// a maximum time delay of roughly 55 minutes, more than enough for most any application. Increasing
+// this delay will increase the maximum dwell time linearly, but also reduces the responsiveness of 
+// run-time command executions, like status reports, since these are performed between each dwell 
+// time step. Also, keep in mind that the Arduino delay timer is not very accurate for long delays.
+#define DWELL_TIME_STEP 50 // Integer (1-255) (milliseconds)
+
+// ---------------------------------------------------------------------------------------
+// FOR ADVANCED USERS ONLY: 
+
+// Toggles XON/XOFF software flow control for serial communications. Not officially supported
+// due to problems involving the Atmega8U2 USB-to-serial chips on current Arduinos. The firmware
+// on these chips do not support XON/XOFF flow control characters and the intermediate buffer 
+// in the chips cause latency and overflow problems with standard terminal programs. However, 
+// using specifically-programmed UI's to manage this latency problem has been confirmed to work.
+// As well as, older FTDI FT232RL-based Arduinos(Duemilanove) are known to work with standard
+// terminal programs since their firmware correctly manage these XON/XOFF characters. In any
+// case, please report any successes to grbl administrators!
+#define ENABLE_XONXOFF 0 // Boolean. Default disabled.
+
+// Creates a delay between the direction pin setting and corresponding step pulse by creating
+// another interrupt (Timer2 compare) to manage it. The main Grbl interrupt (Timer1 compare) 
+// sets the direction pins, and does not immediately set the stepper pins, as it would in 
+// normal operation. The Timer2 compare fires next to set the stepper pins after the step 
+// pulse delay time, and Timer2 overflow will complete the step pulse, except now delayed 
+// by the step pulse time plus the step pulse delay. (Thanks langwadt for the idea!)
+//   This is an experimental feature that should only be used if your setup requires a longer
+// delay between direction and step pin settings (some opto coupler based drivers), as it may
+// adversely effect Grbl's high-end performance (>10kHz). Please notify Grbl administrators 
+// of your successes or difficulties, as we will monitor this and possibly integrate this as a 
+// standard feature for future releases. However, we suggest to first try our direction delay
+// hack/solution posted in the Wiki involving inverting the stepper pin mask.
+// NOTE: If set greater than zero, step pulse delay will be compiled and enabled. Also, the 
+// total delay added with the Grbl settings pulse microseconds must not exceed 127 ms.
+#define STEP_PULSE_DELAY 0 // Step pulse delay in microseconds. Default disabled.
+
+// ---------------------------------------------------------------------------------------
+
+// TODO: The following options are set as compile-time options for now, until the next EEPROM 
+// settings version has solidified. 
+#define CYCLE_AUTO_START 1    // Cycle auto-start boolean flag for the planner.
+#define BLOCK_DELETE_ENABLE 0 // Block delete enable/disable flag during g-code parsing
+#define REPORT_INCH_MODE 0    // Status reporting unit mode (1 = inch, 0 = mm)
+#if REPORT_INCH_MODE
+  #define DECIMAL_PLACES 3
+  #define DECIMAL_MULTIPLIER 1000 // 10^DECIMAL_PLACES
+#else
+  #define DECIMAL_PLACES 2  // mm-mode
+  #define DECIMAL_MULTIPLIER 100
 #endif
 
-// Pin-assignments from Grbl 0.5
+//  Limit step rate for homing
+#define LIMIT_STEP_RATE 1  	// (mm/min)
 
-// #define STEPPERS_DISABLE_DDR     DDRD
-// #define STEPPERS_DISABLE_PORT    PORTD
-// #define STEPPERS_DISABLE_BIT         2
-// 
-// #define STEPPING_DDR       DDRC
-// #define STEPPING_PORT      PORTC 
-// #define X_STEP_BIT           0
-// #define Y_STEP_BIT           1
-// #define Z_STEP_BIT           2
-// #define X_DIRECTION_BIT            3
-// #define Y_DIRECTION_BIT            4
-// #define Z_DIRECTION_BIT            5
-// 
-// #define LIMIT_DDR      DDRD
-// #define LIMIT_PORT     PORTD
-// #define X_LIMIT_BIT          3
-// #define Y_LIMIT_BIT          4
-// #define Z_LIMIT_BIT          5
-// 
-// #define SPINDLE_ENABLE_DDR DDRD
-// #define SPINDLE_ENABLE_PORT PORTD
-// #define SPINDLE_ENABLE_BIT 6
-// 
-// #define SPINDLE_DIRECTION_DDR DDRD
-// #define SPINDLE_DIRECTION_PORT PORTD
-// #define SPINDLE_DIRECTION_BIT 7
+// Debounce delay is the time delay the controller waits for a "good" signal from the limit switch.
+// A delay of 3ms to 5ms is a good starting value.
+#define LIMIT_DEBOUNCE_DELAY 5 // (milliseconds)
+
+
+#endif

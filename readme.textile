@@ -6,17 +6,24 @@ The controller is written in highly optimized C utilizing every clever feature o
 
 It accepts standards-compliant G-code and has been tested with the output of several CAM tools with no problems. Arcs, circles and helical motion are fully supported, as well as, other basic functional g-code commands. Functions and variables are not currently supported, but may be included in future releases in a form of a pre-processor.
 
-Grbl includes full acceleration management with look ahead. That means the controller will look up to 16 to 20 motions into the future and plan its velocities ahead to deliver smooth acceleration and jerk-free cornering.
+Grbl includes full acceleration management with look ahead. That means the controller will look up to 18 motions into the future and plan its velocities ahead to deliver smooth acceleration and jerk-free cornering.
 
-*Changelog for v0.7 from v0.6:*
-  - Significantly improved and optimized planner re-factoring.
-  - New robust cornering algorithm, enabling smoother and faster motions.
-  - Arc acceleration planning enabled by efficient vector transformation implementation.
-  - Stepper subsystem re-factoring to help remove some motion issues from pre-v0.7 builds.
-  - Increased dwell times.
-  - G92 coordinate system offset support.
-  - (Beta) Limit switch and homing cycle support.
-  - Many other bug fixes and efficiency improvements.
+*Changelog for v0.8 from v0.7:*
+  - *ALPHA status: _Under heavy development. Code state may significantly change with each push as new features are integrated._*
+  - Major structural overhaul to allow for multi-tasking events and new feature sets
+  - New run-time command control: Feed hold (pause), Cycle start (resume), Reset (abort), Status reporting
+  - Controlled feed hold with deceleration to ensure no skipped steps and loss of location.
+  - After feed hold, cycle accelerations are re-planned and may be resumed.
+  - Re-factored g-code parser with robust error-checking.
+  - Work coordinate system (G54), offsets(G92), and machine coordinate system support. G10 work coordinate settings support. (Up to 6 work coordinate systems(G54-G59) available as a compile-time option.)
+  - Program stop(M0,M1*,M2,M30) initial support. Optional stop to do.
+  - System reset re-initializes grbl without resetting the Arduino and retains machine/home position and work coordinates.
+  - Restructured planner and stepper modules to become independent and ready for future features.
+  - Reduced serial read buffer to 128 characters and increased write buffer to 64 characters.
+  - Misc bug fixes and removed deprecated acceleration enabled code.  
+  - Planned features: Jog mode, full-featured status reporting, runtime settings such as toggling block delete.
+  - Advanced compile-time options: Up to 6 work coordinate systems(G54-G59), XON/XOFF flow control (limited support), direction and step pulse time delay.
+  
 
 *Important note for Atmega 168 users:* Going forward, support for Atmega 168 will be dropped due to its limited memory and speed. However, legacy Grbl v0.51 "in the branch called 'v0_51' is still available for use.
 

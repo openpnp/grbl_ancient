@@ -1,5 +1,5 @@
 /*
-  limits.h - code pertaining to limit-switches and performing the homing cycle
+  spindle_control.h - spindle control methods
   Part of Grbl
 
   Copyright (c) 2009-2011 Simen Svale Skogsrud
@@ -18,17 +18,12 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef limits_h
-#define limits_h
+#ifndef coolant_control_h
+#define coolant_control_h 
 
-#include "config.h"
+#include <avr/io.h>
 
-#define LIMIT_MASK ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)|(1<<C_LIMIT_BIT)) // All limit bits
-
-// initialize the limits module
-void limits_init();
-
-// perform the homing cycle
-void limits_go_home();
+void coolant_init();
+void coolant_flood(uint8_t);
 
 #endif

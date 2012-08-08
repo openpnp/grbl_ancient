@@ -1,5 +1,5 @@
 /*
-  limits.h - code pertaining to limit-switches and performing the homing cycle
+  coolant_control.c - coolant control methods
   Part of Grbl
 
   Copyright (c) 2009-2011 Simen Svale Skogsrud
@@ -18,17 +18,23 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef limits_h
-#define limits_h
-
+#include "coolant_control.h"
+#include "settings.h"
 #include "config.h"
 
-#define LIMIT_MASK ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)|(1<<C_LIMIT_BIT)) // All limit bits
+#include <avr/io.h>
 
-// initialize the limits module
-void limits_init();
+void coolant_init()
+{
+  FLOOD_COOLANT_DDR |= 1<<FLOOD_COOLANT_BIT;
+}
 
-// perform the homing cycle
-void limits_go_home();
-
-#endif
+void coolant_flood(uint8_t on)
+{
+  if (on) {
+    FLOOD_COOLANT_PORT |= 1<<FLOOD_COOLANT_BIT;
+  }
+  else {
+    FLOOD_COOLANT_PORT &= ~(1<<FLOOD_COOLANT_BIT);
+  }
+}

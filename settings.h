@@ -22,24 +22,24 @@
 #ifndef settings_h
 #define settings_h
 
-
 #include <math.h>
 #include <inttypes.h>
 
-#define GRBL_VERSION "0.7d"
+#define GRBL_VERSION "0.81"
 
 // Version of the EEPROM data. Will be used to migrate existing data from older versions of Grbl
 // when firmware is upgraded. Always stored in byte 0 of eeprom
-#define SETTINGS_VERSION 4
+#define SETTINGS_VERSION 5
 
 // Current global settings (persisted in EEPROM from byte 1 onwards)
 typedef struct {
-  double steps_per_mm[3];
+  double steps_per_mm[4];
   uint8_t microsteps;
   uint8_t pulse_microseconds;
   double default_feed_rate;
   double default_seek_rate;
-  uint8_t invert_mask;
+  uint8_t invert_mask_stepdir;
+  uint8_t invert_mask_limit;
   double mm_per_arc_segment;
   double acceleration;
   double junction_deviation;
